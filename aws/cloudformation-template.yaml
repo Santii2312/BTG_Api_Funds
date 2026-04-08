@@ -41,7 +41,7 @@ Parameters:
 
   JarFileName:
     Type: String
-    Default: fondos-api-0.0.1-SNAPSHOT.jar
+    Default: fondos-api.jar
     Description: Nombre del archivo JAR en el bucket S3
 
 Resources:
@@ -190,10 +190,8 @@ Resources:
         - Key: Environment
           Value: !Ref EnvironmentName
 
-  SESEmailIdentity:
-    Type: AWS::SES::EmailIdentity
-    Properties:
-      EmailIdentity: !Ref NotificationEmail
+  # SESEmailIdentity no se crea aqui porque el email ya esta verificado en SES.
+  # Si necesitas verificar un email nuevo, hazlo manualmente desde la consola de SES.
 
   # ============================================
   # COMPUTE - EC2 con Docker (App + MongoDB)
@@ -201,81 +199,9 @@ Resources:
   AppInstance:
     Type: AWS::EC2::Instance
     DependsOn: VPCGatewayAttachment
-    Metadata:
-      AWS::CloudFormation::Init:
-        configSets:
-          full_install: [install_docker, download_jar, run_services]
-        install_docker:
-          commands:
-            01_update:
-              command: yum update -y
-            02_install_docker:
-              command: amazon-linux-extras install docker -y
-            03_start_docker:
-              command: systemctl start docker && systemctl enable docker
-            04_install_compose:
-              command: |
-                curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-                chmod +x /usr/local/bin/docker-compose
-        download_jar:
-          commands:
-            01_download_jar:
-              command: !Sub |
-                aws s3 cp s3://${ArtifactBucketName}/${JarFileName} /home/ec2-user/app/fondos-api.jar
-            02_set_permissions:
-              command: chown -R ec2-user:ec2-user /home/ec2-user/app
-          files:
-            /home/ec2-user/app/.keep:
-              content: ''
-              mode: '000644'
-              owner: ec2-user
-              group: ec2-user
-        run_services:
-          files:
-            /home/ec2-user/docker-compose.yml:
-              content: !Sub |
-                services:
-                  mongodb:
-                    image: mongo:7
-                    container_name: mongodb
-                    restart: always
-                    ports:
-                      - "27017:27017"
-                    volumes:
-                      - mongo_data:/data/db
-                    environment:
-                      MONGO_INITDB_DATABASE: fondosdb
-
-                  fondos-api:
-                    image: eclipse-temurin:21-jre
-                    container_name: fondos-api
-                    restart: always
-                    ports:
-                      - "8080:8080"
-                    depends_on:
-                      - mongodb
-                    environment:
-                      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/fondosdb
-                      JWT_SECRET: ${JwtSecret}
-                      AWS_SNS_TOPIC_ARN: ${SNSTopic}
-                      AWS_REGION: ${AWS::Region}
-                      NOTIFICATION_EMAIL: ${NotificationEmail}
-                    volumes:
-                      - /home/ec2-user/app:/app
-                    working_dir: /app
-                    command: java -jar fondos-api.jar
-
-                volumes:
-                  mongo_data:
-              mode: '000644'
-              owner: ec2-user
-              group: ec2-user
-          commands:
-            01_run_compose:
-              command: /usr/local/bin/docker-compose -f /home/ec2-user/docker-compose.yml up -d
     Properties:
       InstanceType: !Ref InstanceType
-      ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}}'
+      ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
       KeyName: !Ref KeyPairName
       IamInstanceProfile: !Ref EC2InstanceProfile
       SubnetId: !Ref PublicSubnet
@@ -295,19 +221,77 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash -xe
-          yum install -y aws-cfn-bootstrap
-          /opt/aws/bin/cfn-init -v \
-            --stack ${AWS::StackName} \
-            --resource AppInstance \
-            --configsets full_install \
-            --region ${AWS::Region}
+          exec > /var/log/user-data.log 2>&1
+
+          # Instalar Docker
+          dnf update -y
+          dnf install -y docker
+          systemctl start docker
+          systemctl enable docker
+          usermod -aG docker ec2-user
+
+          # Instalar Docker Compose plugin
+          mkdir -p /usr/local/lib/docker/cli-plugins
+          curl -SL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64" \
+            -o /usr/local/lib/docker/cli-plugins/docker-compose
+          chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+          ln -sf /usr/local/lib/docker/cli-plugins/docker-compose /usr/local/bin/docker-compose
+
+          # Crear directorio y descargar JAR desde S3
+          mkdir -p /home/ec2-user/app
+          aws s3 cp s3://${ArtifactBucketName}/${JarFileName} /home/ec2-user/app/fondos-api.jar
+          chown -R ec2-user:ec2-user /home/ec2-user/app
+
+          # Crear docker-compose.yml
+          cat > /home/ec2-user/docker-compose.yml << 'COMPOSE'
+          services:
+            mongodb:
+              image: mongo:7
+              container_name: mongodb
+              restart: always
+              ports:
+                - "27017:27017"
+              volumes:
+                - mongo_data:/data/db
+              environment:
+                MONGO_INITDB_DATABASE: fondosdb
+
+            fondos-api:
+              image: eclipse-temurin:21-jre
+              container_name: fondos-api
+              restart: always
+              ports:
+                - "8080:8080"
+              depends_on:
+                - mongodb
+              environment:
+                SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/fondosdb
+                JWT_SECRET: "${JwtSecret}"
+                AWS_SNS_TOPIC_ARN: "${SNSTopic}"
+                AWS_REGION: "${AWS::Region}"
+                NOTIFICATION_EMAIL: "${NotificationEmail}"
+              volumes:
+                - /home/ec2-user/app:/app
+              working_dir: /app
+              command: java -jar fondos-api.jar
+
+          volumes:
+            mongo_data:
+          COMPOSE
+
+          chown ec2-user:ec2-user /home/ec2-user/docker-compose.yml
+
+          # Levantar servicios
+          docker compose -f /home/ec2-user/docker-compose.yml up -d
+
+          # Senalar a CloudFormation que termino OK
           /opt/aws/bin/cfn-signal -e $? \
             --stack ${AWS::StackName} \
             --resource AppInstance \
             --region ${AWS::Region}
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT10M
+        Timeout: PT15M
 
 # ============================================
 # OUTPUTS
@@ -345,4 +329,4 @@ Outputs:
 
   DeployCommand:
     Description: Comando para subir el JAR al bucket S3
-    Value: !Sub 'aws s3 cp target/${JarFileName} s3://${ArtifactBucketName}/${JarFileName}'
+    Value: !Sub 'aws s3 cp target/fondos-api.jar s3://${ArtifactBucketName}/${JarFileName}'

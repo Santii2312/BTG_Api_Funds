@@ -14,10 +14,11 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>fondos-api</name>
     <description>API para gestion de fondos - Prueba Tecnica</description>
-
+    <packaging>jar</packaging>
     <properties>
         <java.version>21</java.version>
         <lombok.version>1.18.38</lombok.version>
+        <finalName>fondos-api</finalName>
     </properties>
 
     <dependencies>
@@ -79,6 +80,7 @@
     </dependencies>
 
     <build>
+        <finalName>fondos-api</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
