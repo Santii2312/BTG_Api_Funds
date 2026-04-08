@@ -1,0 +1,348 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  BTG Pactual - Fondos API Infrastructure
+  Arquitectura economica para prueba tecnica: EC2 + MongoDB + SNS + SES
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+    Description: Nombre del ambiente
+
+  InstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues: [t3.micro, t3.small, t3.medium]
+    Description: Tipo de instancia EC2 (t3.micro es free tier eligible)
+
+  KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Nombre del Key Pair para acceso SSH a la instancia
+
+  JwtSecret:
+    Type: String
+    NoEcho: true
+    MinLength: 32
+    Description: Secret key para JWT (minimo 32 caracteres)
+
+  NotificationEmail:
+    Type: String
+    Description: Email verificado en SES para envio de notificaciones
+
+  AllowedSSHCidr:
+    Type: String
+    Default: 0.0.0.0/0
+    Description: CIDR permitido para acceso SSH (recomendado restringir a tu IP)
+
+  ArtifactBucketName:
+    Type: String
+    Description: Nombre del bucket S3 donde se sube el JAR (debe existir previamente)
+
+  JarFileName:
+    Type: String
+    Default: fondos-api-0.0.1-SNAPSHOT.jar
+    Description: Nombre del archivo JAR en el bucket S3
+
+Resources:
+  # ============================================
+  # NETWORKING - VPC y componentes de red
+  # ============================================
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-fondos-vpc'
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-public-subnet'
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-igw'
+
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-public-rt'
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  # ============================================
+  # SECURITY - Security Groups
+  # ============================================
+  AppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group para la API de Fondos
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+          Description: Acceso HTTP a la API
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref AllowedSSHCidr
+          Description: Acceso SSH restringido
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: Salida a internet
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-app-sg'
+
+  # ============================================
+  # IAM - Roles y permisos
+  # ============================================
+  EC2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${EnvironmentName}-fondos-ec2-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: FondosAppPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: AllowS3ArtifactDownload
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource: !Sub 'arn:aws:s3:::${ArtifactBucketName}/*'
+              - Sid: AllowSNSPublish
+                Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !Ref SNSTopic
+              - Sid: AllowSESSendEmail
+                Effect: Allow
+                Action:
+                  - ses:SendEmail
+                  - ses:SendRawEmail
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    ses:FromAddress: !Ref NotificationEmail
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref EC2Role
+
+  # ============================================
+  # NOTIFICACIONES - SNS (SMS) y SES (Email)
+  # ============================================
+  SNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub '${EnvironmentName}-fondos-notifications'
+      DisplayName: BTG Fondos Notifications
+      Tags:
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  SESEmailIdentity:
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity: !Ref NotificationEmail
+
+  # ============================================
+  # COMPUTE - EC2 con Docker (App + MongoDB)
+  # ============================================
+  AppInstance:
+    Type: AWS::EC2::Instance
+    DependsOn: VPCGatewayAttachment
+    Metadata:
+      AWS::CloudFormation::Init:
+        configSets:
+          full_install: [install_docker, download_jar, run_services]
+        install_docker:
+          commands:
+            01_update:
+              command: yum update -y
+            02_install_docker:
+              command: amazon-linux-extras install docker -y
+            03_start_docker:
+              command: systemctl start docker && systemctl enable docker
+            04_install_compose:
+              command: |
+                curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+                chmod +x /usr/local/bin/docker-compose
+        download_jar:
+          commands:
+            01_download_jar:
+              command: !Sub |
+                aws s3 cp s3://${ArtifactBucketName}/${JarFileName} /home/ec2-user/app/fondos-api.jar
+            02_set_permissions:
+              command: chown -R ec2-user:ec2-user /home/ec2-user/app
+          files:
+            /home/ec2-user/app/.keep:
+              content: ''
+              mode: '000644'
+              owner: ec2-user
+              group: ec2-user
+        run_services:
+          files:
+            /home/ec2-user/docker-compose.yml:
+              content: !Sub |
+                services:
+                  mongodb:
+                    image: mongo:7
+                    container_name: mongodb
+                    restart: always
+                    ports:
+                      - "27017:27017"
+                    volumes:
+                      - mongo_data:/data/db
+                    environment:
+                      MONGO_INITDB_DATABASE: fondosdb
+
+                  fondos-api:
+                    image: eclipse-temurin:21-jre
+                    container_name: fondos-api
+                    restart: always
+                    ports:
+                      - "8080:8080"
+                    depends_on:
+                      - mongodb
+                    environment:
+                      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/fondosdb
+                      JWT_SECRET: ${JwtSecret}
+                      AWS_SNS_TOPIC_ARN: ${SNSTopic}
+                      AWS_REGION: ${AWS::Region}
+                      NOTIFICATION_EMAIL: ${NotificationEmail}
+                    volumes:
+                      - /home/ec2-user/app:/app
+                    working_dir: /app
+                    command: java -jar fondos-api.jar
+
+                volumes:
+                  mongo_data:
+              mode: '000644'
+              owner: ec2-user
+              group: ec2-user
+          commands:
+            01_run_compose:
+              command: /usr/local/bin/docker-compose -f /home/ec2-user/docker-compose.yml up -d
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}}'
+      KeyName: !Ref KeyPairName
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds:
+        - !Ref AppSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 20
+            VolumeType: gp3
+            Encrypted: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-fondos-api'
+        - Key: Environment
+          Value: !Ref EnvironmentName
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          yum install -y aws-cfn-bootstrap
+          /opt/aws/bin/cfn-init -v \
+            --stack ${AWS::StackName} \
+            --resource AppInstance \
+            --configsets full_install \
+            --region ${AWS::Region}
+          /opt/aws/bin/cfn-signal -e $? \
+            --stack ${AWS::StackName} \
+            --resource AppInstance \
+            --region ${AWS::Region}
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT10M
+
+# ============================================
+# OUTPUTS
+# ============================================
+Outputs:
+  APIURL:
+    Description: URL de la API de Fondos
+    Value: !Sub 'http://${AppInstance.PublicIp}:8080'
+    Export:
+      Name: !Sub '${EnvironmentName}-api-url'
+
+  InstanceId:
+    Description: ID de la instancia EC2
+    Value: !Ref AppInstance
+
+  PublicIP:
+    Description: IP publica de la instancia
+    Value: !GetAtt AppInstance.PublicIp
+
+  SNSTopicArn:
+    Description: ARN del topic SNS para notificaciones
+    Value: !Ref SNSTopic
+    Export:
+      Name: !Sub '${EnvironmentName}-sns-topic-arn'
+
+  VPCId:
+    Description: ID de la VPC
+    Value: !Ref VPC
+    Export:
+      Name: !Sub '${EnvironmentName}-vpc-id'
+
+  SecurityGroupId:
+    Description: ID del Security Group de la aplicacion
+    Value: !Ref AppSecurityGroup
+
+  DeployCommand:
+    Description: Comando para subir el JAR al bucket S3
+    Value: !Sub 'aws s3 cp target/${JarFileName} s3://${ArtifactBucketName}/${JarFileName}'
