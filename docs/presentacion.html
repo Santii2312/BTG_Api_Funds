@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Fondos BTG Pactual — Presentación</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: #1a2035;
+            --bg-card-hover: #1f2847;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-pink: #ec4899;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #1e293b;
+            --gradient-1: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            --gradient-2: linear-gradient(135deg, #06b6d4, #3b82f6);
+            --gradient-3: linear-gradient(135deg, #10b981, #06b6d4);
+            --gradient-4: linear-gradient(135deg, #f59e0b, #ef4444);
+            --gradient-5: linear-gradient(135deg, #ec4899, #8b5cf6);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .presentation {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 80px;
+            opacity: 0;
+            transform: translateX(60px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: all;
+        }
+
+        .slide.exit-left {
+            opacity: 0;
+            transform: translateX(-60px);
+        }
+
+        .slide-number {
+            position: fixed;
+            bottom: 30px;
+            right: 40px;
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+            z-index: 100;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: var(--gradient-1);
+            transition: width 0.4s ease;
+            z-index: 100;
+            border-radius: 0 2px 2px 0;
+        }
+
+        .nav-controls {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .nav-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            backdrop-filter: blur(12px);
+        }
+
+        .nav-btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Title Slide */
+        .title-slide {
+            text-align: center;
+            background: radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 60%);
+        }
+
+        .title-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            border-radius: 50px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: var(--accent-blue);
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 32px;
+            letter-spacing: 0.5px;
+        }
+
+        .title-main {
+            font-size: 56px;
+            font-weight: 800;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.15;
+            margin-bottom: 20px;
+            max-width: 900px;
+        }
+
+        .title-sub {
+            font-size: 22px;
+            color: var(--text-secondary);
+            font-weight: 400;
+            max-width: 650px;
+            line-height: 1.6;
+        }
+
+        .title-tech {
+            display: flex;
+            gap: 16px;
+            margin-top: 48px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tech-pill {
+            padding: 10px 22px;
+            border-radius: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tech-pill .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        /* Section Title */
+        .section-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            line-height: 1.2;
+        }
+
+        .section-desc {
+            font-size: 18px;
+            color: var(--text-secondary);
+            max-width: 700px;
+            line-height: 1.7;
+            margin-bottom: 40px;
+        }
+
+        /* Cards grid */
+        .cards-grid {
+            display: grid;
+            gap: 16px;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .cards-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+        .cards-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+        .cards-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .card-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .card-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Code blocks */
+        .code-block {
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px 24px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            overflow-x: auto;
+            width: 100%;
+            max-width: 1100px;
+            margin-top: 16px;
+        }
+
+        .code-block .kw { color: #ff7b72; }
+        .code-block .type { color: #79c0ff; }
+        .code-block .str { color: #a5d6ff; }
+        .code-block .ann { color: #d2a8ff; }
+        .code-block .comment { color: #8b949e; font-style: italic; }
+        .code-block .method { color: #d2a8ff; }
+        .code-block .field { color: #ffa657; }
+        .code-block .num { color: #79c0ff; }
+
+        /* Architecture diagram */
+        .arch-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 800px;
+            align-items: center;
+        }
+
+        .arch-layer {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+            padding: 18px 28px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            transition: all 0.3s;
+        }
+
+        .arch-layer:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+        }
+
+        .arch-layer-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .arch-layer-info {
+            flex: 1;
+        }
+
+        .arch-layer-name {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 2px;
+        }
+
+        .arch-layer-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .arch-arrow {
+            font-size: 20px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        /* Method table */
+        .method-table {
+            width: 100%;
+            max-width: 1100px;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin-top: 8px;
+        }
+
+        .method-table th {
+            background: var(--bg-card);
+            padding: 14px 20px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .method-table td {
+            padding: 14px 20px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+            vertical-align: top;
+        }
+
+        .method-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .method-table tr:hover td {
+            background: rgba(59, 130, 246, 0.04);
+        }
+
+        .method-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--accent-purple);
+            font-weight: 600;
+        }
+
+        .http-badge {
+            display: inline-flex;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.5px;
+        }
+
+        .http-get { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
+        .http-post { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+
+        /* Flow diagram */
+        .flow-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        .flow-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 18px 24px;
+            border-radius: 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            text-align: center;
+            min-width: 130px;
+            transition: all 0.3s;
+        }
+
+        .flow-step:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+
+        .flow-step-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .flow-step-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .flow-arrow {
+            font-size: 22px;
+            color: var(--text-muted);
+        }
+
+        /* Analogy box */
+        .analogy-box {
+            background: rgba(245, 158, 11, 0.06);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 14px;
+            padding: 24px 28px;
+            max-width: 1100px;
+            width: 100%;
+            margin-top: 16px;
+        }
+
+        .analogy-box .label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent-orange);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .analogy-box .text {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* Split layout */
+        .split-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            width: 100%;
+            max-width: 1100px;
+            align-items: start;
+        }
+
+        .split-left, .split-right {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Lists */
+        .feature-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .feature-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .feature-list li .check {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .slide-content-top {
+            width: 100%;
+            max-width: 1100px;
+            text-align: left;
+            margin-bottom: 12px;
+        }
+
+        @media (max-width: 900px) {
+            .slide { padding: 30px 24px; }
+            .title-main { font-size: 36px; }
+            .section-title { font-size: 30px; }
+            .cards-grid.cols-2, .cards-grid.cols-3, .cards-grid.cols-4 { grid-template-columns: 1fr; }
+            .split-layout { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="presentation" id="presentation">
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- ============================== SLIDE 1: TITLE ============================== -->
+    <div class="slide title-slide active" data-slide="0">
+        <div class="title-badge">📊 Prueba Técnica — BTG Pactual</div>
+        <h1 class="title-main">API de Gestión de Fondos de Inversión</h1>
+        <p class="title-sub">Explicación completa del proyecto: cada capa, cada clase y cada método, explicado para principiantes</p>
+        <div class="title-tech">
+            <div class="tech-pill"><span class="dot" style="background:var(--accent-orange)"></span> Java 17</div>
+            <div class="tech-pill"><span class="dot" style="background:var(--accent-green)"></span> Spring Boot 3</div>
+            <div class="tech-pill"><span class="dot" style="background:var(--accent-cyan)"></span> MongoDB</div>
+            <div class="tech-pill"><span class="dot" style="background:var(--accent-purple)"></span> JWT Security</div>
+            <div class="tech-pill"><span class="dot" style="background:var(--accent-blue)"></span> AWS ECS Fargate</div>
+        </div>
+    </div>
+
+    <!-- ============================== SLIDE 2: ¿QUÉ HACE? ============================== -->
+    <div class="slide" data-slide="1">
+        <div class="slide-content-top">
+            <div class="section-tag" style="background:rgba(59,130,246,0.12);color:var(--accent-blue);">🎯 Visión General</div>
+            <h2 class="section-title">¿Qué hace esta aplicación?</h2>
+            <p class="section-desc">Es una API REST que permite a un cliente de BTG Pactual manejar sus fondos de inversión <strong>sin llamar a un asesor</strong>.</p>
+        </div>
+        <div class="cards-grid cols-3">
+            <div class="card">
+                <div class="card-icon" style="background:rgba(16,185,129,0.12);">💰</div>
+                <div class="card-title">Suscribirse a Fondos</div>
+                <div class="card-text">El cliente elige un fondo del catálogo y decide cuánto dinero invertir. El sistema valida montos mínimos y saldo disponible.</div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:rgba(239,68,68,0.12);">🔙</div>
+                <div class="card-title">Cancelar Fondos</div>
+                <div class="card-text">El cliente puede retirar su dinero de un fondo. El sistema calcula cuánto le corresponde y lo devuelve a su saldo.</div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:rgba(139,92,246,0.12);">📋</div>
+                <div class="card-title">Ver Historial</div>
+                <div class="card-text">El cliente consulta todas sus transacciones: qué fondos suscribió, cuándo y por cuánto dinero.</div>
+            </div>
+        </div>
+        <div class="analogy-box">
+            <div class="label">💡 Analogía para entender</div>
+            <div class="text">Imagina que esta API es como un <strong>cajero automático para fondos de inversión</strong>. Te logueas (metes tu tarjeta), ves los fondos disponibles (lees el menú), metes plata en un fondo (depósito) o la sacas (retiro), y siempre puedes ver tu recibo (historial).</div>
+        </div>
+    </div>
+
+    <!-- ============================== SLIDE 3: ARQUITECTURA ============================== -->
+    <div class="slide" data-slide="2">
+        <div class="slide-content-top">
+            <div class="section-tag" style="background:rgba(6,182,212,0.12);color:var(--accent-cyan);">🏗️ Arquitectura</div>
+            <h2 class="section-title">Arquitectura por Capas</h2>
+            <p class="section-desc">El proyecto organiza el código en capas. Cada capa tiene una responsabilidad única. Una petición viaja de arriba hacia abajo.</p>
+        </div>
+        <div class="arch-diagram">
+            <div class="arch-layer">
+                <div class="arch-layer-icon" style="background:rgba(59,130,246,0.15);">🌐</div>
+                <div class="arch-layer-info">
+                    <div class="arch-layer-name" style="color:var(--accent-blue);">Controller (Puerta de entrada)</div>
+                    <div class="arch-layer-desc">Recibe las peticiones HTTP del cliente (JSON) y las reenvía al Service. No tiene lógica de negocio.</div>
+                </div>
+            </div>
+            <div class="arch-arrow">⬇️</div>
+            <div class="arch-layer">
+                <div class="arch-layer-icon" style="background:rgba(139,92,246,0.15);">⚙️</div>
+                <div class="arch-layer-info">
+                    <div class="arch-layer-name" style="color:var(--accent-purple);">Service (Cerebro)</div>
+                    <div class="arch-layer-desc">Aquí vive toda la lógica del negocio: validar montos, descontar saldos, crear transacciones, enviar notificaciones.</div>
+                </div>
+            </div>
+            <div class="arch-arrow">⬇️</div>
+            <div class="arch-layer">
+                <div class="arch-layer-icon" style="background:rgba(16,185,129,0.15);">🗄️</div>
+                <div class="arch-layer-info">
+                    <div class="arch-layer-name" style="color:var(--accent-green);">Repository (Acceso a datos)</div>
+                    <div class="arch-layer-desc">Se comunica con MongoDB para guardar y consultar datos. Spring genera las consultas automáticamente.</div>
+                </div>
+            </div>
+            <div class="arch-arrow">⬇️</div>
+            <div class="arch-layer">
+                <div class="arch-layer-icon" style="background:rgba(6,182,212,0.15);">📦</div>
+                <div class="arch-layer-info">
+                    <div class="arch-layer-name" style="color:var(--accent-cyan);">Domain (Entidades)</div>
+                    <div class="arch-layer-desc">Define la estructura de los datos (User, Fund, Transaction) que se guardan en la base de datos MongoDB.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================== SLIDE 4: DOMAIN - ENTIDADES ============================== -->
+    <div class="slide" data-slide="3">
+        <div class="slide-content-top">
+            <div class="section-tag" style="background:rgba(6,182,212,0.12);color:var(--accent-cyan);">📦 Capa Domain</div>
+            <h2 class="section-title">Entidades (Los "objetos" de la BD)</h2>
+            <p class="section-desc">Cada entidad es una clase Java que representa una colección (tabla) en MongoDB. Usan Lombok para no escribir getters/setters manualmente.</p>
+        </div>
+        <div class="cards-grid cols-3">
+            <div class="card">
+                <div class="card-icon" style="background:rgba(59,130,246,0.12);">👤</div>
+                <div class="card-title">User.java</div>
+                <div class="card-text">
+                    <strong>Colección:</strong> <code>users</code><br><br>
+                    <strong>Campos:</strong><br>
+                    • <code>id</code> — Identificador único<br>
+                    • <code>username</code> — Nombre de usuario<br>
+                    • <code>password</code> — Contraseña (encriptada)<br>
+                    • <code>roles</code> — Permisos (ej: "USER")<br>
+                    • <code>balance</code> — Saldo disponible ($)<br>
+                    • <code>email</code> — Correo electrónico<br>
+                    • <code>phone</code> — Teléfono<br>
+                    • <code>notificationPreference</code> — EMAIL o SMS
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:rgba(16,185,129,0.12);">💼</div>
+                <div class="card-title">Fund.java</div>
+                <div class="card-text">
+                    <strong>Colección:</strong> <code>funds</code><br><br>
+                    <strong>Campos:</strong><br>
+                    • <code>id</code> — Identificador único<br>
+                    • <code>nombre</code> — Nombre del fondo<br>
+                    • <code>montoMinimo</code> — Monto mínimo para invertir<br>
+                    • <code>categoria</code> — FPV o FIC<br><br>
+                    <em style="color:var(--text-muted);">📌 Se crean 5 fondos automáticamente al arrancar.</em>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:rgba(139,92,246,0.12);">📄</div>
+                <div class="card-title">Transaction.java</div>
+                <div class="card-text">
+                    <strong>Colección:</strong> <code>transactions</code><br><br>
+                    <strong>Campos:</strong><br>
+                    • <code>id</code> — Identificador único<br>
+                    • <code>fundId</code> — A qué fondo se refiere<br>
+                    • <code>userId</code> — Quién hizo la operación<br>
+                    • <code>type</code> — SUBSCRIBE o UNSUBSCRIBE<br>
+                    • <code>amount</code> — Monto de la operación<br>
+                    • <code>timestamp</code> — Fecha y hora
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================== SLIDE 5: DOMAIN - ENUMS ============================== -->
+    <div class="slide" data-slide="4">
+        <div class="slide-content-top">
+            <div class="section-tag" style="background:rgba(6,182,212,0.12);color:var(--accent-cyan);">📦 Capa Domain</div>
+            <h2 class="section-title">Enums (Constantes con nombre)</h2>
+            <p class="section-desc">Los <strong>enums</strong> son listas fijas de valores posibles. Evitan que alguien escriba "suscribe" en vez de "SUBSCRIBE".</p>
+        </div>
+        <div class="split-layout">
+            <div class="card">
+                <div class="card-icon" style="background:rgba(245,158,11,0.12);">🔄</div>
+                <div class="card-title">TransactionType.java</div>
+                <div class="card-text" style="margin-bottom:16px;">Define los dos tipos de operación posibles:</div>
+                <div class="code-block">
+<span class="kw">public enum</span> <span class="type">TransactionType</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="field">SUBSCRIBE</span>,&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// El usuario mete plata en un fondo</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="field">UNSUBSCRIBE</span>&nbsp;&nbsp;<span class="comment">// El usuario saca plata de un fondo</span><br>
+}
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:rgba(236,72,153,0.12);">🔔</div>
+                <div class="card-title">NotificationPreference.java</div>
+                <div class="card-text" style="margin-bottom:16px;">Define cómo quiere ser notificado el usuario:</div>
+                <div class="code-block">
+<span class="kw">public enum</span> <span class="type">NotificationPreference</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="field">EMAIL</span>,&nbsp;&nbsp;<span class="comment">// Notificar por correo</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="field">SMS</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Notificar por mensaje de texto</span><br>
+}
+                </div>
+            </div>
+        </div>
+        <div class="analogy-box">
+            <div class="label">💡 ¿Para qué sirven los enums?</div>
+            <div class="text">Piensa en un semáforo: solo puede ser <strong>ROJO</strong>, <strong>AMARILLO</strong> o <strong>VERDE</strong>. No puede ser "azul". Los enums son exactamente eso: valores predefinidos que no pueden ser otra cosa.</div>
+        </div>
+    </div>
+
+    <!-- ============================== SLIDE 6: DTOs ============================== -->
+    <div class="slide" data-slide="5">
+        <div class="slide-content-top">
+            <div class="section-tag" style="background:rgba(245,158,11,0.12);color:var(--accent-orange);">📬 Capa DTO</div>
+            <h2 class="section-title">DTOs (Lo que viaja por HTTP)</h2>
+            <p class="section-desc">Los DTOs son "formularios" que el cliente llena al hacer una petición. Solo contienen los datos necesarios, nunca exponen la base de datos directamente.</p>
+        </div>
+        <div class="cards-grid cols-2">
+            <div class="card">
+                <div class="card-icon" style="background:rgba(59,130,246,0.12);">🔑</div>
+                <div class="card-title">AuthRequest.java</div>
+                <div class="card-text">Para hacer login. Contiene:<br>• <code>username</code> — Nombre de usuario<br>• <code>password</code> — Contraseña</div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:rgba(16,185,129,0.12);">🎟️</div>
+                <div class="card-title">AuthResponse.java</div>
+                <div class="card-text">Lo que devuelve el servidor al hacer login:<br>• <code>token</code> — El JWT (tu "pase VIP")</div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:rgba(139,92,246,0.12);">💰</div>
+                <div class="card-title">SubscribeRequest.java</div>
+                <div class="card-text">Para suscribirse a un fondo. Contiene:<br>• <code>fundId</code> — ID del fondo (obligatorio)<br>• <code>amount</code> — Monto a invertir (mayor a 0)<br><br><em style="color:var(--accent-green);">✅ Usa @NotBlank, @NotNull, @DecimalMin para validar</em></div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:rgba(239,68,68,0.12);">❌</div>
+                <div class="card-title">CancelSubscriptionRequest.java</div>
+                <div class="card-text">Para cancelar un fondo. Contiene:<br>• <code>fundId</code> — ID del fondo (obligatorio)<br><br><em style="color:var(--text-muted);">No necesita monto porque devuelve todo.</em></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================== SLIDE 7: REPOSITORIES ============================== -->
+    <div class="slide" data-slide="6">
+        <div class="slide-content-top">
+            <div class="section-tag" style="background:rgba(16,185,129,0.12);color:var(--accent-green);">🗄️ Capa Repository</div>
+            <h2 class="section-title">Repositorios (Acceso a MongoDB)</h2>
+            <p class="section-desc">Los repositorios son <strong>interfaces</strong> que extienden <code>MongoRepository</code>. Spring genera automáticamente el código para guardar, buscar y eliminar documentos. ¡No escribimos SQL ni queries!</p>
+        </div>
+        <div class="cards-grid cols-3">
+            <div class="card">
+                <div class="card-icon" style="background:rgba(59,130,246,0.12);">👤</div>
+                <div class="card-title">UserRepository.java</div>
+                <div class="card-text">
+                    <strong>Métodos heredados gratis:</strong><br>
+                    • <code>save()</code>, <code>findById()</code>, <code>findAll()</code>, <code>delete()</code>...<br><br>
+                    <strong>Método custom:</strong><br>
+                    • <code>findByUsername(String)</code><br>
+                    <em style="color:var(--text-muted);">→ Spring lee el nombre del método y genera la query solo.</em>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:rgba(16,185,129,0.12);">💼</div>
+                <div class="card-title">FundRepository.java</div>
+                <div class="card-text">
+                    <strong>Métodos heredados gratis:</strong><br>
+                    • <code>save()</code>, <code>findById()</code>, <code>findAll()</code>, <code>count()</code>...<br><br>
+                    <em style="color:var(--text-muted);">No necesita métodos custom porque los fondos se buscan por ID o se listan todos.</em>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:rgba(139,92,246,0.12);">📄</div>
+                <div class="card-title">TransactionRepository.java</div>
+                <div class="card-text">
+                    <strong>Métodos custom:</strong><br>
+                    • <code>findByUserId(String)</code><br>
+                    <em>→ Busca transacciones de un usuario</em><br><br>
+                    • <code>findByUserIdAndFundId(String, String)</code><br>
+                    <em>→ Busca transacciones de un usuario en un fondo específico</em>
+                </div>
+            </div>
+        </div>
+        <div class="analogy-box">
+            <div class="label">💡 ¿Cómo funciona la magia?</div>
+            <div class="text">Si nombras el método <code>findByUsername</code>, Spring entiende: "busca documentos donde el campo <strong>username</strong> sea igual al parámetro". Si pones <code>findByUserIdAndFundId</code>, busca por <strong>dos campos</strong>. ¡Solo con el nombre!</div>
+        </div>
+    </div>
+
+    <!-- ============================== SLIDE 8: FundService - subscribe ============================== -->
+    <div class="slide" data-slide="7">
+        <div class="slide-content-top">
+            <div class="section-tag" style="background:rgba(139,92,246,0.12);color:var(--accent-purple);">⚙️ FundService.java</div>
+            <h2 class="section-title">Método: subscribe()</h2>
+            <p class="section-desc">Es el método más importante. Procesa la suscripción de un usuario a un fondo de inversión.</p>
+        </div>
+        <div class="flow-container" style="margin-bottom: 24px;">
+            <div class="flow-step">
+                <div class="flow-step-num" style="background:var(--gradient-1);">1</div>
+                <div class="flow-step-text">Buscar<br>usuario</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="flow-step-num" style="background:var(--gradient-2);">2</div>
+                <div class="flow-step-text">Buscar<br>fondo</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="flow-step-num" style="background:var(--gradient-3);">3</div>
+                <div class="flow-step-text">Validar monto<br>≥ mínimo</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="flow-step-num" style="background:var(--gradient-4);">4</div>
+                <div class="flow-step-text">Validar<br>saldo</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="flow-step-num" style="background:var(--gradient-5);">5</div>
+                <div class="flow-step-text">Descontar<br>saldo</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="flow-step-num" style="background:var(--gradient-1);">6</div>
+                <div class="flow-step-text">Guardar<br>transacción</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="flow-step-num" style="background:var(--gradient-2);">7</div>
+                <div class="flow-step-text">Enviar<br>notificación</div>
+            </div>
+        </div>
+        <div class="code-block">
+<span class="kw">public</span> <span class="type">Transaction</span> <span class="method">subscribe</span>(<span class="type">String</span> username, <span class="type">SubscribeRequest</span> request) {<br>
+&nbsp;&nbsp;<span class="type">User</span> user = userRepository.<span class="method">findByUsername</span>(username)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;.orElseThrow(() -&gt; <span class="kw">new</span> <span class="type">ResourceNotFoundException</span>(<span class="str">"User not found"</span>));<br><br>
+&nbsp;&nbsp;<span class="type">Fund</span> fund = fundRepository.<span class="method">findById</span>(request.getFundId())<br>
+&nbsp;&nbsp;&nbsp;&nbsp;.orElseThrow(() -&gt; <span class="kw">new</span> <span class="type">ResourceNotFoundException</span>(<span class="str">"Fund not found"</span>));<br><br>
+&nbsp;&nbsp;<span class="kw">if</span> (request.getAmount().compareTo(fund.getMontoMinimo()) &lt; <span class="num">0</span>)&nbsp;&nbsp;<span class="comment">// ¿Monto menor al mínimo?</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">throw new</span> <span class="type">InsufficientBalanceException</span>(<span class="str">"El monto debe ser al menos..."</span>);<br><br>
+&nbsp;&nbsp;<span class="kw">if</span> (user.getBalance().compareTo(request.getAmount()) &lt; <span class="num">0</span>)&nbsp;&nbsp;&nbsp;<span class="comment">// ¿No tiene suficiente plata?</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">throw new</span> <span class="type">InsufficientBalanceException</span>(<span class="str">"No tiene saldo disponible..."</span>);<br><br>
+&nbsp;&nbsp;user.setBalance(user.getBalance().<span class="method">subtract</span>(request.getAmount()));&nbsp;&nbsp;<span class="comment">// Resta el monto</span><br>
+&nbsp;&nbsp;userRepository.<span class="method">save</span>(user);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Guarda el usuario actualizado en MongoDB</span><br><br>
+&nbsp;&nbsp;<span class="comment">// Crea y guarda la transacción + envía notificación</span><br>
+}
+        </div>
+    </div>
+
+    <!-- ============================== SLIDE 9: FundService - unsubscribe ============================== -->
+    <div class="slide" data-slide="8">
+        <div class="slide-content-top">
+            <div class="section-tag" style="background:rgba(139,92,246,0.12);color:var(--accent-purple);">⚙️ FundService.java</div>
+            <h2 class="section-title">Método: unsubscribe()</h2>
+            <p class="section-desc">Cancela la suscripción a un fondo y devuelve todo el dinero invertido al saldo del usuario.</p>
+        </div>
+        <div class="flow-container" style="margin-bottom: 24px;">
+            <div class="flow-step">
+                <div class="flow-step-num" style="background:var(--gradient-1);">1</div>
+                <div class="flow-step-text">Buscar<br>usuario</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="flow-step-num" style="background:var(--gradient-2);">2</div>
+                <div class="flow-step-text">Buscar<br>fondo</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="flow-step-num" style="background:var(--gradient-3);">3</div>
+                <div class="flow-step-text">Traer historial<br>usuario + fondo</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="flow-step-num" style="background:var(--gradient-4);">4</div>
+                <div class="flow-step-text">Calcular<br>saldo neto</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="flow-step-num" style="background:var(--gradient-5);">5</div>
+                <div class="flow-step-text">Devolver<br>al balance</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="flow-step-num" style="background:var(--gradient-1);">6</div>
+                <div class="flow-step-text">Guardar +<br>notificar</div>
+            </div>
+        </div>
+        <div class="code-block">
+<span class="comment">// Trae TODAS las transacciones del usuario para ESTE fondo</span><br>
+<span class="type">List</span>&lt;<span class="type">Transaction</span>&gt; transactions = transactionRepository.<span class="method">findByUserIdAndFundId</span>(userId, fundId);<br><br>
+<span class="comment">// Calcula cuánto tiene invertido realmente:</span><br>
+<span class="comment">//   SUBSCRIBE  $100,000 → amountToReturn = +100,000</span><br>
+<span class="comment">//   SUBSCRIBE   $50,000 → amountToReturn = +150,000</span><br>
+<span class="comment">//   UNSUBSCRIBE $80,000 → amountToReturn =  +70,000  (ya retiró 80K antes)</span><br><br>
+<span class="type">BigDecimal</span> amountToReturn = <span class="type">BigDecimal</span>.<span class="field">ZERO</span>;<br>
+<span class="kw">for</span> (<span class="type">Transaction</span> t : transactions) {<br>
+&nbsp;&nbsp;<span class="kw">if</span> (t.getType() == <span class="field">SUBSCRIBE</span>)&nbsp;&nbsp;&nbsp;&nbsp;amountToReturn = amountToReturn.<span class="method">add</span>(t.getAmount());<br>
+&nbsp;&nbsp;<span class="kw">if</span> (t.getType() == <span class="field">UNSUBSCRIBE</span>)&nbsp;amountToReturn = amountToReturn.<span class="method">subtract</span>(t.getAmount());<br>
+}<br><br>
+<span class="kw">if</span> (amountToReturn &lt;= <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> <span class="type">ActiveSubscriptionNotFoundException</span>(...); <span class="comment">// No tiene nada invertido</span><br><br>
+user.setBalance(user.getBalance().<span class="method">add</span>(amountToReturn)); <span class="comment">// Devuelve la plata</span>
+        </div>
+    </div>
+
+    <!-- ============================== SLIDE 10: FundService - getAllFunds & getHistory ============================== -->
+    <div class="slide" data-slide="9">
+        <div class="slide-content-top">
+            <div class="section-tag" style="background:rgba(139,92,246,0.12);color:var(--accent-purple);">⚙️ FundService.java</div>
+            <h2 class="section-title">Métodos: getAllFunds() y getHistory()</h2>
+            <p class="section-desc">Dos métodos simples de consulta que no modifican datos.</p>
+        </div>
+        <div class="split-layout">
+            <div class="card">
+                <div class="card-icon" style="background:rgba(16,185,129,0.12);">📋</div>
+                <div class="card-title">getAllFunds()</div>
+                <div class="card-text" style="margin-bottom:16px;">Devuelve la lista completa de fondos disponibles con su nombre, categoría y monto mínimo. El cliente necesita esto para saber en qué puede invertir.</div>
+                <div class="code-block">
+<span class="kw">public</span> <span class="type">List</span>&lt;<span class="type">Fund</span>&gt; <span class="method">getAllFunds</span>() {<br>
+&nbsp;&nbsp;<span class="kw">return</span> fundRepository.<span class="method">findAll</span>();<br>
+}<br>
+<span class="comment">// Así de simple. MongoRepository ya tiene findAll().</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:rgba(139,92,246,0.12);">🕐</div>
+                <div class="card-title">getHistory()</div>
+                <div class="card-text" style="margin-bottom:16px;">Busca al usuario por username y luego trae todas sus transacciones. Es un historial completo de movimientos.</div>
+                <div class="code-block">
+<span class="kw">public</span> <span class="type">List</span>&lt;<span class="type">Transaction</span>&gt; <span class="method">getHistory</span>(<span class="type">String</span> username) {<br>
+&nbsp;&nbsp;<span class="type">User</span> user = userRepository<br>
+&nbsp;&nbsp;&nbsp;&nbsp;.<span class="method">findByUsername</span>(username)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;.orElseThrow(...);<br>
+&nbsp;&nbsp;<span class="kw">return</span> transactionRepository<br>
+&nbsp;&nbsp;&nbsp;&nbsp;.<span class="method">findByUserId</span>(user.getId());<br>
+}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================== SLIDE 11: AuthService ============================== -->
+    <div class="slide" data-slide="10">
+        <div class="slide-content-top">
+            <div class="section-tag" style="background:rgba(139,92,246,0.12);color:var(--accent-purple);">⚙️ AuthService.java</div>
+            <h2 class="section-title">Servicio de Autenticación</h2>
+            <p class="section-desc">Maneja el login del usuario y la creación del usuario demo para pruebas.</p>
+        </div>
+        <div class="split-layout">
+            <div class="card">
+                <div class="card-icon" style="background:rgba(59,130,246,0.12);">🔐</div>
+                <div class="card-title">authenticate(AuthRequest)</div>
+                <div class="card-text" style="margin-bottom:16px;">
+                    <strong>¿Qué hace paso a paso?</strong><br><br>
+                    1️⃣ Recibe username y password<br>
+                    2️⃣ <code>AuthenticationManager</code> valida las credenciales contra MongoDB (la contraseña se compara con BCrypt)<br>
+                    3️⃣ Si es válido, carga los datos del usuario<br>
+                    4️⃣ Genera un token JWT firmado<br>
+                    5️⃣ Devuelve el token al cliente<br><br>
+                    <em style="color:var(--accent-orange);">⚠️ Si la contraseña es incorrecta, Spring lanza una excepción automáticamente.</em>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:rgba(16,185,129,0.12);">👤</div>
+                <div class="card-title">createDemoUser()</div>
+                <div class="card-text" style="margin-bottom:16px;">
+                    <strong>¿Qué hace?</strong><br><br>
+                    Crea un usuario de prueba si no existe:<br><br>
+                    • <strong>Username:</strong> demo<br>
+                    • <strong>Password:</strong> password (encriptada con BCrypt)<br>
+                    • <strong>Balance:</strong> $500,000<br>
+                    • <strong>Email:</strong> demo@test.com<br>
+                    • <strong>Notificación:</strong> EMAIL<br><br>
+                    <em style="color:var(--text-muted);">Se ejecuta al arrancar la app.</em>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================== SLIDE 12: NotificationService ============================== -->
+    <div class="slide" data-slide="11">
+        <div class="slide-content-top">
+            <div class="section-tag" style="background:rgba(139,92,246,0.12);color:var(--accent-purple);">⚙️ NotificationService.java</div>
+            <h2 class="section-title">Servicio de Notificaciones</h2>
+            <p class="section-desc">Envía notificaciones al usuario según su preferencia. Actualmente es una simulación (imprime en consola), pero la estructura está lista para conectar un servicio real.</p>
+        </div>
+        <div class="cards-grid cols-3" style="max-width:900px;">
+            <div class="card">
+                <div class="card-icon" style="background:rgba(236,72,153,0.12);">📨</div>
+                <div class="card-title">sendNotification()</div>
+                <div class="card-text">Método público. Revisa la preferencia del usuario y llama a <code>sendEmail()</code> o <code>sendSms()</code>.</div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:rgba(59,130,246,0.12);">📧</div>
+                <div class="card-title">sendEmail() (privado)</div>
+                <div class="card-text">Simula el envío de un email. En producción se conectaría a AWS SES o similar.</div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:rgba(16,185,129,0.12);">📱</div>
+                <div class="card-title">sendSms() (privado)</div>
+                <div class="card-text">Simula el envío de un SMS. En producción se conectaría a AWS SNS o Twilio.</div>
+            </div>
+        </div>
+        <div class="code-block" style="max-width:700px;">
+<span class="kw">public void</span> <span class="method">sendNotification</span>(<span class="type">User</span> user, <span class="type">String</span> message) {<br>
+&nbsp;&nbsp;<span class="kw">if</span> (user.getNotificationPreference() == <span class="field">EMAIL</span>) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="method">sendEmail</span>(user.getEmail(), message);<br>
+&nbsp;&nbsp;} <span class="kw">else if</span> (user.getNotificationPreference() == <span class="field">SMS</span>) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="method">sendSms</span>(user.getPhone(), message);<br>
+&nbsp;&nbsp;}<br>
+}
+        </div>
+    </div>
+
+    <!-- ============================== SLIDE 13: CONTROLLERS ============================== -->
+    <div class="slide" data-slide="12">
+        <div class="slide-content-top">
+            <div class="section-tag" style="background:rgba(59,130,246,0.12);color:var(--accent-blue);">🌐 Capa Controller</div>
+            <h2 class="section-title">Controladores (Los endpoints)</h2>
+            <p class="section-desc">Son las "puertas" de la API. Reciben las peticiones HTTP y llaman al servicio correspondiente.</p>
+        </div>
+        <table class="method-table">
+            <thead>
+                <tr>
+                    <th>Método HTTP</th>
+                    <th>Ruta</th>
+                    <th>Controlador</th>
+                    <th>¿Qué hace?</th>
+                    <th>¿Necesita JWT?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="http-badge http-post">POST</span></td>
+                    <td><span class="method-name">/api/auth/login</span></td>
+                    <td>AuthController</td>
+                    <td>Inicia sesión y devuelve un token JWT</td>
+                    <td>❌ No</td>
+                </tr>
+                <tr>
+                    <td><span class="http-badge http-get">GET</span></td>
+                    <td><span class="method-name">/api/funds</span></td>
+                    <td>FundController</td>
+                    <td>Lista todos los fondos disponibles</td>
+                    <td>✅ Sí</td>
+                </tr>
+                <tr>
+                    <td><span class="http-badge http-post">POST</span></td>
+                    <td><span class="method-name">/api/funds/subscribe</span></td>
+                    <td>FundController</td>
+                    <td>Suscribe al usuario a un fondo</td>
+                    <td>✅ Sí</td>
+                </tr>
+                <tr>
+                    <td><span class="http-badge http-post">POST</span></td>
+                    <td><span class="method-name">/api/funds/unsubscribe</span></td>
+                    <td>FundController</td>
+                    <td>Cancela la suscripción a un fondo</td>
+                    <td>✅ Sí</td>
+                </tr>
+                <tr>
+                    <td><span class="http-badge http-get">GET</span></td>
+                    <td><span class="method-name">/api/funds/history</span></td>
+                    <td>FundController</td>
+                    <td>Muestra el historial de transacciones</td>
+                    <td>✅ Sí</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="analogy-box">
+            <div class="label">💡 ¿Qué es Authentication authentication?</div>
+            <div class="text">Cuando un endpoint tiene el parámetro <code>Authentication</code>, Spring automáticamente le pasa la información del usuario autenticado (extraída del token JWT). Con <code>authentication.getName()</code> obtenemos el username sin pedirlo en el body.</div>
+        </div>
+    </div>
+
+    <!-- ============================== SLIDE 14: SECURITY - JWT ============================== -->
+    <div class="slide" data-slide="13">
+        <div class="slide-content-top">
+            <div class="section-tag" style="background:rgba(239,68,68,0.12);color:var(--accent-red);">🔒 Capa Security</div>
+            <h2 class="section-title">¿Cómo funciona la seguridad JWT?</h2>
+            <p class="section-desc">JWT (JSON Web Token) es como un "pase VIP" firmado digitalmente. El servidor lo genera al hacer login y el cliente lo envía en cada petición.</p>
+        </div>
+        <div class="flow-container" style="margin-bottom:28px;">
+            <div class="flow-step" style="min-width:160px;">
+                <div class="flow-step-num" style="background:var(--gradient-1);">1</div>
+                <div class="flow-step-text">Cliente envía<br><strong>usuario + contraseña</strong><br>a /api/auth/login</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step" style="min-width:160px;">
+                <div class="flow-step-num" style="background:var(--gradient-3);">2</div>
+                <div class="flow-step-text">Servidor valida<br>y genera un<br><strong>token JWT</strong></div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step" style="min-width:160px;">
+                <div class="flow-step-num" style="background:var(--gradient-4);">3</div>
+                <div class="flow-step-text">Cliente guarda<br>el token y lo usa<br>en cada petición</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step" style="min-width:160px;">
+                <div class="flow-step-num" style="background:var(--gradient-5);">4</div>
+                <div class="flow-step-text">Servidor verifica<br>el token con el<br><strong>JwtAuthFilter</strong></div>
+            </div>
+        </div>
+        <div class="cards-grid cols-2" style="max-width:900px;">
+            <div class="card">
+                <div class="card-title">📤 Petición del cliente</div>
+                <div class="code-block">
+<span class="field">GET</span> /api/funds/history<br>
+<span class="field">Authorization:</span> <span class="str">Bearer eyJhbGciOiJIUzI1NiJ9...</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">🔑 ¿Qué contiene el JWT?</div>
+                <div class="code-block">
+{<br>
+&nbsp;&nbsp;<span class="str">"sub"</span>: <span class="str">"demo"</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Username</span><br>
+&nbsp;&nbsp;<span class="str">"iat"</span>: <span class="num">1712534400</span>,&nbsp;&nbsp;&nbsp;<span class="comment">// Fecha de creación</span><br>
+&nbsp;&nbsp;<span class="str">"exp"</span>: <span class="num">1712620800</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Expira en 24h</span><br>
+}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================== SLIDE 15: SECURITY CLASSES ============================== -->
+    <div class="slide" data-slide="14">
+        <div class="slide-content-top">
+            <div class="section-tag" style="background:rgba(239,68,68,0.12);color:var(--accent-red);">🔒 Capa Security</div>
+            <h2 class="section-title">Las 5 clases de seguridad</h2>
+            <p class="section-desc">Cada clase tiene un rol específico en el flujo de autenticación y autorización.</p>
+        </div>
+        <div class="cards-grid cols-2" style="max-width:1000px;">
+            <div class="card">
+                <div class="card-icon" style="background:rgba(239,68,68,0.12);">🛡️</div>
+                <div class="card-title">SecurityConfig.java</div>
+                <div class="card-text">
+                    <strong>¿Qué configura?</strong><br>
+                    • Desactiva CSRF (no es necesario en APIs REST)<br>
+                    • <code>/api/auth/**</code> es público (sin login)<br>
+                    • Todo lo demás requiere autenticación<br>
+                    • Sesiones STATELESS (sin cookies)<br>
+                    • Registra el filtro JWT antes del de Spring
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:rgba(139,92,246,0.12);">🔍</div>
+                <div class="card-title">JwtAuthenticationFilter.java</div>
+                <div class="card-text">
+                    <strong>¿Qué hace?</strong><br>
+                    Se ejecuta en <strong>cada petición</strong>.<br>
+                    1. Lee el header <code>Authorization: Bearer xxx</code><br>
+                    2. Extrae el username del token<br>
+                    3. Verifica que el token sea válido y no haya expirado<br>
+                    4. Si es válido, autentifica al usuario en el contexto de Spring
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:rgba(59,130,246,0.12);">🔑</div>
+                <div class="card-title">JwtService.java</div>
+                <div class="card-text">
+                    <strong>Métodos:</strong><br>
+                    • <code>generateToken()</code> — Crea un JWT<br>
+                    • <code>extractUsername()</code> — Lee el username del token<br>
+                    • <code>isTokenValid()</code> — ¿Token OK y no expirado?<br>
+                    • <code>getSignInKey()</code> — Obtiene la llave secreta para firmar
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:rgba(16,185,129,0.12);">👥</div>
+                <div class="card-title">UserDetailsServiceImpl.java</div>
+                <div class="card-text">
+                    <strong>¿Qué hace?</strong><br>
+                    Implementa <code>UserDetailsService</code> de Spring.<br>
+                    Busca al usuario en MongoDB y lo convierte al formato que Spring Security entiende (con username, password y roles).
+                </div>
+            </div>
+            <div class="card" style="grid-column: span 2;">
+                <div class="card-icon" style="background:rgba(245,158,11,0.12);">⚙️</div>
+                <div class="card-title">AppConfig.java</div>
+                <div class="card-text">
+                    Configura los "beans" necesarios para la seguridad:<br>
+                    • <code>AuthenticationProvider</code> — Usa DaoAuthenticationProvider con nuestro UserDetailsService y BCrypt<br>
+                    • <code>AuthenticationManager</code> — Lo que Spring usa para validar credenciales<br>
+                    • <code>PasswordEncoder</code> — BCryptPasswordEncoder para encriptar contraseñas
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================== SLIDE 16: EXCEPTIONS ============================== -->
+    <div class="slide" data-slide="15">
+        <div class="slide-content-top">
+            <div class="section-tag" style="background:rgba(239,68,68,0.12);color:var(--accent-red);">⚠️ Capa Exception</div>
+            <h2 class="section-title">Manejo Global de Errores</h2>
+            <p class="section-desc">En vez de que el servidor devuelva un error feo de Java, capturamos los errores y devolvemos mensajes amigables en JSON.</p>
+        </div>
+        <div class="split-layout">
+            <div style="display:flex;flex-direction:column;gap:12px;">
+                <div class="card">
+                    <div class="card-title" style="color:var(--accent-red);">ResourceNotFoundException</div>
+                    <div class="card-text">Se lanza cuando no se encuentra un usuario o fondo.<br>→ Devuelve <strong>HTTP 404</strong></div>
+                </div>
+                <div class="card">
+                    <div class="card-title" style="color:var(--accent-orange);">InsufficientBalanceException</div>
+                    <div class="card-text">Se lanza cuando el monto es menor al mínimo o no hay saldo suficiente.<br>→ Devuelve <strong>HTTP 400</strong></div>
+                </div>
+                <div class="card">
+                    <div class="card-title" style="color:var(--accent-pink);">ActiveSubscriptionNotFoundException</div>
+                    <div class="card-text">Se lanza cuando intentas cancelar un fondo al que no estás suscrito.<br>→ Devuelve <strong>HTTP 400</strong></div>
+                </div>
+            </div>
+            <div>
+                <div class="card">
+                    <div class="card-title" style="color:var(--accent-purple);">GlobalExceptionHandler.java</div>
+                    <div class="card-text" style="margin-bottom:16px;">La clase con <code>@ControllerAdvice</code> que intercepta TODAS las excepciones y las convierte a JSON bonito.</div>
+                    <div class="code-block">
+<span class="comment">// Lo que el cliente recibe (JSON):</span><br>
+{<br>
+&nbsp;&nbsp;<span class="str">"timestamp"</span>: <span class="str">"2026-04-07T22:00:00"</span>,<br>
+&nbsp;&nbsp;<span class="str">"message"</span>: <span class="str">"No tiene saldo disponible<br>&nbsp;&nbsp;&nbsp;para vincularse al fondo FDO-ACCIONES"</span><br>
+}<br><br>
+<span class="comment">// En vez de un stacktrace feo de 50 líneas 😱</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================== SLIDE 17: MAIN APP ============================== -->
+    <div class="slide" data-slide="16">
+        <div class="slide-content-top">
+            <div class="section-tag" style="background:rgba(245,158,11,0.12);color:var(--accent-orange);">🚀 Arranque</div>
+            <h2 class="section-title">FondosApiApplication.java</h2>
+            <p class="section-desc">El punto de entrada de la aplicación. Cuando arranca, siembra datos iniciales automáticamente.</p>
+        </div>
+        <div class="split-layout">
+            <div>
+                <h3 style="font-size:18px;margin-bottom:16px;">¿Qué pasa al iniciar?</h3>
+                <ul class="feature-list">
+                    <li><span class="check" style="background:rgba(16,185,129,0.15);color:var(--accent-green);">✓</span>Spring Boot arranca el servidor en el puerto 8080</li>
+                    <li><span class="check" style="background:rgba(16,185,129,0.15);color:var(--accent-green);">✓</span>Se conecta a MongoDB (mongodb://localhost:27017/fondosdb)</li>
+                    <li><span class="check" style="background:rgba(59,130,246,0.15);color:var(--accent-blue);">✓</span>Ejecuta el <code>CommandLineRunner</code> → seedDatabase()</li>
+                    <li><span class="check" style="background:rgba(139,92,246,0.15);color:var(--accent-purple);">✓</span>Crea el usuario <strong>demo/password</strong> si no existe</li>
+                    <li><span class="check" style="background:rgba(245,158,11,0.15);color:var(--accent-orange);">✓</span>Crea los 5 fondos del catálogo si la colección está vacía</li>
+                </ul>
+            </div>
+            <div>
+                <h3 style="font-size:18px;margin-bottom:16px;">Los 5 Fondos Iniciales</h3>
+                <table class="method-table" style="margin-top:0;">
+                    <thead><tr><th>Nombre</th><th>Cat.</th><th>Mínimo</th></tr></thead>
+                    <tbody>
+                        <tr><td>FPV_BTG_PACTUAL_RECAUDADORA</td><td>FPV</td><td style="color:var(--accent-green);">$75,000</td></tr>
+                        <tr><td>FPV_BTG_PACTUAL_ECOPETROL</td><td>FPV</td><td style="color:var(--accent-green);">$125,000</td></tr>
+                        <tr><td>DEUDAPRIVADA</td><td>FIC</td><td style="color:var(--accent-green);">$50,000</td></tr>
+                        <tr><td>FDO-ACCIONES</td><td>FIC</td><td style="color:var(--accent-green);">$250,000</td></tr>
+                        <tr><td>FPV_BTG_PACTUAL_DINAMICA</td><td>FPV</td><td style="color:var(--accent-green);">$100,000</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================== SLIDE 18: TESTS ============================== -->
+    <div class="slide" data-slide="17">
+        <div class="slide-content-top">
+            <div class="section-tag" style="background:rgba(16,185,129,0.12);color:var(--accent-green);">✅ Testing</div>
+            <h2 class="section-title">FundServiceTest.java</h2>
+            <p class="section-desc">Tests unitarios usando JUnit 5 + Mockito. Simulan las dependencias (repositorios) para probar la lógica de negocio <strong>sin necesitar MongoDB real</strong>.</p>
+        </div>
+        <div class="cards-grid cols-3">
+            <div class="card">
+                <div class="card-icon" style="background:rgba(16,185,129,0.12);">✅</div>
+                <div class="card-title">testSubscribeSuccess()</div>
+                <div class="card-text">
+                    Simula un usuario con $500,000 que invierte $100,000 en un fondo con mínimo $75,000.<br><br>
+                    <strong>Verifica:</strong><br>
+                    • La transacción se creó<br>
+                    • El tipo es SUBSCRIBE<br>
+                    • El saldo quedó en $400,000<br>
+                    • Se envió notificación
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:rgba(239,68,68,0.12);">❌</div>
+                <div class="card-title">testSubscribeInsufficient<br>Balance()</div>
+                <div class="card-text">
+                    Simula un usuario con $500,000 que intenta invertir $600,000.<br><br>
+                    <strong>Verifica:</strong><br>
+                    • Se lanza <code>InsufficientBalanceException</code><br>
+                    • El mensaje dice "No tiene saldo disponible"
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:rgba(245,158,11,0.12);">⚠️</div>
+                <div class="card-title">testSubscribeBelow<br>MinimumAmount()</div>
+                <div class="card-text">
+                    Simula invertir $50,000 en un fondo que exige mínimo $75,000.<br><br>
+                    <strong>Verifica:</strong><br>
+                    • Se lanza <code>InsufficientBalanceException</code><br>
+                    • El mensaje dice "El monto debe ser al menos el mínimo"
+                </div>
+            </div>
+        </div>
+        <div class="analogy-box">
+            <div class="label">💡 ¿Qué es Mockito?</div>
+            <div class="text">Mockito crea <strong>"dobles"</strong> de los repositorios. En vez de ir a MongoDB de verdad, le decimos: "cuando alguien llame a <code>findByUsername("test")</code>, devuelve este usuario falso". Así probamos la lógica sin base de datos.</div>
+        </div>
+    </div>
+
+    <!-- ============================== SLIDE 19: AWS ============================== -->
+    <div class="slide" data-slide="18">
+        <div class="slide-content-top">
+            <div class="section-tag" style="background:rgba(245,158,11,0.12);color:var(--accent-orange);">☁️ Infraestructura</div>
+            <h2 class="section-title">Despliegue en AWS</h2>
+            <p class="section-desc">El archivo <code>cloudformation-template.yaml</code> define la infraestructura como código (IaC) para desplegar la app en AWS.</p>
+        </div>
+        <div class="flow-container" style="margin-bottom:28px;">
+            <div class="flow-step" style="min-width:180px;border-color:rgba(245,158,11,0.3);">
+                <div class="flow-step-num" style="background:var(--gradient-4);">☁️</div>
+                <div class="flow-step-text"><strong>ECS Cluster</strong><br>Agrupa los contenedores</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step" style="min-width:180px;border-color:rgba(139,92,246,0.3);">
+                <div class="flow-step-num" style="background:var(--gradient-5);">📦</div>
+                <div class="flow-step-text"><strong>Task Definition</strong><br>Define el contenedor:<br>256 CPU, 512 MB</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step" style="min-width:180px;border-color:rgba(59,130,246,0.3);">
+                <div class="flow-step-num" style="background:var(--gradient-1);">🚀</div>
+                <div class="flow-step-text"><strong>ECS Service</strong><br>Tipo: FARGATE<br>(serverless)</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step" style="min-width:180px;border-color:rgba(16,185,129,0.3);">
+                <div class="flow-step-num" style="background:var(--gradient-3);">🗄️</div>
+                <div class="flow-step-text"><strong>DocumentDB</strong><br>MongoDB compatible<br>en AWS</div>
+            </div>
+        </div>
+        <div class="cards-grid cols-2" style="max-width:900px;">
+            <div class="card">
+                <div class="card-title">¿Qué es Fargate?</div>
+                <div class="card-text">Ejecuta contenedores Docker <strong>sin administrar servidores</strong>. Tú solo defines cuánta CPU y memoria necesitas y AWS se encarga del resto.</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Variables de entorno inyectadas</div>
+                <div class="card-text">
+                    • <code>SPRING_DATA_MONGODB_URI</code> — Conexión a DocumentDB<br>
+                    • <code>JWT_SECRET</code> — Clave secreta para firmar tokens
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================== SLIDE 20: RESUMEN ============================== -->
+    <div class="slide title-slide" data-slide="19">
+        <div class="title-badge">📊 Resumen Final</div>
+        <h1 class="title-main" style="font-size:42px;">Estructura completa del proyecto</h1>
+        <div class="cards-grid cols-4" style="max-width:1100px;margin-top:32px;">
+            <div class="card" style="text-align:center;">
+                <div style="font-size:32px;margin-bottom:8px;">📦</div>
+                <div class="card-title">5 Entidades</div>
+                <div class="card-text" style="font-size:12px;">User, Fund, Transaction + 2 Enums</div>
+            </div>
+            <div class="card" style="text-align:center;">
+                <div style="font-size:32px;margin-bottom:8px;">📬</div>
+                <div class="card-title">4 DTOs</div>
+                <div class="card-text" style="font-size:12px;">AuthRequest, AuthResponse, SubscribeRequest, CancelRequest</div>
+            </div>
+            <div class="card" style="text-align:center;">
+                <div style="font-size:32px;margin-bottom:8px;">🗄️</div>
+                <div class="card-title">3 Repositorios</div>
+                <div class="card-text" style="font-size:12px;">UserRepo, FundRepo, TransactionRepo</div>
+            </div>
+            <div class="card" style="text-align:center;">
+                <div style="font-size:32px;margin-bottom:8px;">⚙️</div>
+                <div class="card-title">3 Servicios</div>
+                <div class="card-text" style="font-size:12px;">FundService, AuthService, NotificationService</div>
+            </div>
+            <div class="card" style="text-align:center;">
+                <div style="font-size:32px;margin-bottom:8px;">🌐</div>
+                <div class="card-title">2 Controllers</div>
+                <div class="card-text" style="font-size:12px;">AuthController (1 endpoint), FundController (4 endpoints)</div>
+            </div>
+            <div class="card" style="text-align:center;">
+                <div style="font-size:32px;margin-bottom:8px;">🔒</div>
+                <div class="card-title">5 Clases Security</div>
+                <div class="card-text" style="font-size:12px;">SecurityConfig, JwtFilter, JwtService, AppConfig, UserDetails</div>
+            </div>
+            <div class="card" style="text-align:center;">
+                <div style="font-size:32px;margin-bottom:8px;">⚠️</div>
+                <div class="card-title">4 Clases Exception</div>
+                <div class="card-text" style="font-size:12px;">GlobalHandler + 3 excepciones custom</div>
+            </div>
+            <div class="card" style="text-align:center;">
+                <div style="font-size:32px;margin-bottom:8px;">✅</div>
+                <div class="card-title">3 Tests</div>
+                <div class="card-text" style="font-size:12px;">Subscribe OK, saldo insuficiente, monto bajo mínimo</div>
+            </div>
+        </div>
+        <p style="margin-top:36px;color:var(--text-muted);font-size:15px;">Usa las flechas ← → o los botones para navegar entre slides</p>
+    </div>
+</div>
+
+<!-- Navigation -->
+<div class="slide-number" id="slideNumber">1 / 20</div>
+<div class="nav-controls">
+    <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)" disabled>←</button>
+    <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">→</button>
+</div>
+
+<script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const progressBar = document.getElementById('progressBar');
+    const slideNumber = document.getElementById('slideNumber');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    function updateSlide() {
+        slides.forEach((slide, i) => {
+            slide.classList.remove('active', 'exit-left');
+            if (i === currentSlide) {
+                slide.classList.add('active');
+            } else if (i < currentSlide) {
+                slide.classList.add('exit-left');
+            }
+        });
+
+        progressBar.style.width = ((currentSlide + 1) / totalSlides * 100) + '%';
+        slideNumber.textContent = (currentSlide + 1) + ' / ' + totalSlides;
+        prevBtn.disabled = currentSlide === 0;
+        nextBtn.disabled = currentSlide === totalSlides - 1;
+    }
+
+    function changeSlide(direction) {
+        const newSlide = currentSlide + direction;
+        if (newSlide >= 0 && newSlide < totalSlides) {
+            currentSlide = newSlide;
+            updateSlide();
+        }
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            changeSlide(1);
+        }
+        if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            changeSlide(-1);
+        }
+    });
+
+    let touchStartX = 0;
+    document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+    document.addEventListener('touchend', (e) => {
+        const diff = touchStartX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 50) changeSlide(diff > 0 ? 1 : -1);
+    });
+
+    updateSlide();
+</script>
+</body>
+</html>
