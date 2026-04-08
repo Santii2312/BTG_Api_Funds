@@ -266,7 +266,6 @@ Resources:
                 - mongodb
               environment:
                 SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/fondosdb
-                JWT_SECRET: "${JwtSecret}"
                 AWS_SNS_TOPIC_ARN: "${SNSTopic}"
                 AWS_REGION: "${AWS::Region}"
                 NOTIFICATION_EMAIL: "${NotificationEmail}"
